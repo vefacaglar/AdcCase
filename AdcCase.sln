@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdcCase", "..\src\AdcCase\AdcCase\AdcCase.csproj", "{40B56C28-9372-411A-900F-6AC70A4CD3F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdcCase", "src\AdcCase\AdcCase.csproj", "{A789F1EF-BFA5-49C2-AAA6-3556038ACFE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{40B56C28-9372-411A-900F-6AC70A4CD3F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40B56C28-9372-411A-900F-6AC70A4CD3F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40B56C28-9372-411A-900F-6AC70A4CD3F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40B56C28-9372-411A-900F-6AC70A4CD3F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A789F1EF-BFA5-49C2-AAA6-3556038ACFE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A789F1EF-BFA5-49C2-AAA6-3556038ACFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A789F1EF-BFA5-49C2-AAA6-3556038ACFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A789F1EF-BFA5-49C2-AAA6-3556038ACFE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
