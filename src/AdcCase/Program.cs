@@ -6,9 +6,6 @@ namespace AdcCase
 
     class Program
     {
-
-        event SaveImageHandler DownloadImageEvent;
-
         static void Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
@@ -31,7 +28,7 @@ namespace AdcCase
                 ClearFiles(imageSetting.SavePath);
             };
 
-            var eventPublisher = new SaveImageEventPublisher();
+            var eventPublisher = new SaveImagePublisher();
             eventPublisher.HandleChange += new SaveImageHandler(DownloadImage);
 
             var parallelOptions = new ParallelOptions
@@ -47,11 +44,10 @@ namespace AdcCase
                 Parallel.For(0, imageSetting.Count, parallelOptions, (index, token) =>
                 {
                     completedCount++;
-                    Console.Clear();
-                    Console.WriteLine($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)");
-                    Console.WriteLine($"Progress: {completedCount}/{imageSetting.Count}");
-                    eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", cts.Token);
 
+                    SetMessage($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)", $"Progress: {completedCount}/{imageSetting.Count}");
+
+                    eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", cts.Token);
                 });
             }
             catch (OperationCanceledException ex)
@@ -89,6 +85,13 @@ namespace AdcCase
             }
         }
 
+        private static void SetMessage(string downloadMessage, string proccesMessage)
+        {
+            Console.Clear();
+            Console.WriteLine(downloadMessage);
+            Console.WriteLine(proccesMessage);
+        }
+
         private static void ClearFiles(string path)
         {
             var files = Directory.GetFiles(path);
@@ -100,7 +103,7 @@ namespace AdcCase
         }
     }
 
-    class SaveImageEventPublisher
+    class SaveImagePublisher
     {
         public event SaveImageHandler HandleChange;
 
