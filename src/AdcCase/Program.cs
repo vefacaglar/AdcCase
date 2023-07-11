@@ -3,11 +3,11 @@ using System;
 
 namespace AdcCase
 {
-    public delegate void SaveImageHandler(string path, CancellationToken token);
+    public delegate void SaveImageHandler(string path, int retryCount, CancellationToken token);
 
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                  .AddJsonFile($"input.json", optional: false, reloadOnChange: true);
@@ -40,17 +40,13 @@ namespace AdcCase
 
             var completedCount = 0;
 
-            var tasks = new List<Task>();
-
             try
             {
-                await Task.WhenAll(tasks.ToArray());
-
                 Parallel.For(0, imageSetting.Count, parallelOptions, (index, token) =>
                 {
                     completedCount++;
 
-                    var task = Task.Run(() => eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", cts.Token)).ContinueWith(x =>
+                    var task = Task.Run(() => eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", 1, cts.Token)).ContinueWith(x =>
                     {
                         SetMessage($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)", $"Progress: {completedCount}/{imageSetting.Count}");
                         return Task.CompletedTask;
@@ -71,26 +67,40 @@ namespace AdcCase
             Console.ReadKey();
         }
 
-        private static void DownloadImage(string path, CancellationToken token)
+        private static void DownloadImage(string path, int retryCount, CancellationToken token)
         {
-            var client = new HttpClient();
-
-            client.BaseAddress = new Uri("https://picsum.photos/100/200");
-            var image = client.GetAsync("").Result;
-
-            if (!Directory.Exists(Directory.GetDirectoryRoot(path)))
+            try
             {
-                Directory.CreateDirectory(Directory.GetDirectoryRoot(path));
-            }
-
-            var fileArray = image.Content.ReadAsByteArrayAsync().Result;
-
-            if (!token.IsCancellationRequested)
-            {
-                using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                if (retryCount > 3)
                 {
-                    fs.Write(fileArray);
+                    throw new Exception("Reached max try count");
                 }
+
+                var client = new HttpClient();
+
+                client.BaseAddress = new Uri("https://picsum.photos/100/200");
+                var image = client.GetAsync("").Result;
+
+                if (!Directory.Exists(Directory.GetDirectoryRoot(path)))
+                {
+                    Directory.CreateDirectory(Directory.GetDirectoryRoot(path));
+                }
+
+                var fileArray = image.Content.ReadAsByteArrayAsync().Result;
+
+                if (!token.IsCancellationRequested)
+                {
+                    using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                    {
+                        fs.Write(fileArray);
+                    }
+                }
+
+            }
+            catch (AggregateException)
+            {
+                retryCount++;
+                DownloadImage(path, retryCount, token);
             }
         }
 
@@ -116,9 +126,9 @@ namespace AdcCase
     {
         public event SaveImageHandler HandleChange;
 
-        public void Download(string path, CancellationToken token)
+        public void Download(string path, int retryCount, CancellationToken token)
         {
-            HandleChange(path, token);
+            HandleChange(path, retryCount, token);
         }
     }
 }

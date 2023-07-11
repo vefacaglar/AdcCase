@@ -1,7 +1,7 @@
 {
   "imagesSetting": {
     "count": 200,
-    "parallelism": 5,
+    "parallelism": 10,
     "savePath": "outputs"
   }
 }
