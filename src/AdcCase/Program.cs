@@ -11,8 +11,6 @@ namespace AdcCase
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-
             var configuration = new ConfigurationBuilder()
                  .AddJsonFile($"input.json", optional: false, reloadOnChange: true);
 
@@ -28,32 +26,51 @@ namespace AdcCase
             var tasks = new List<Task>();
 
             var eventPublisher = new SaveImageEventPublisher();
-            eventPublisher.HandleChange += new SaveImageHandler(EventPublisher_OnChanged);
+            eventPublisher.HandleChange += new SaveImageHandler(DownloadImage);
 
-            for (int i = 0; i < imageSetting.Count; i++)
+            var parallelOptions = new ParallelOptions
             {
-                eventPublisher.Handle("100/200");
-            }
+                MaxDegreeOfParallelism = imageSetting.Parallelism,
+            };
 
+            var completedCount = 0;
+
+            Parallel.For(0, imageSetting.Count, parallelOptions, index =>
+            {
+                completedCount++;
+                Console.Clear();
+                Console.WriteLine($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)");
+                Console.WriteLine($"Progress: {completedCount}/{imageSetting.Count}");
+                eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg");
+            });
         }
 
-        private static void EventPublisher_OnChanged(string path)
+        private static void DownloadImage(string path)
         {
-            Console.Clear();
             var client = new HttpClient();
 
-            client.BaseAddress = new Uri("https://picsum.photos");
-            var image = client.GetAsync(path).Result;
+            client.BaseAddress = new Uri("https://picsum.photos/100/200");
+            var image = client.GetAsync("").Result;
+
+            if (!Directory.Exists(Directory.GetDirectoryRoot(path)))
+            {
+                Directory.CreateDirectory(Directory.GetDirectoryRoot(path));
+            }
+
+            var fileArray = image.Content.ReadAsByteArrayAsync().Result;
+
+            using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+            {
+                fs.Write(fileArray);
+            }
         }
     }
 
     class SaveImageEventPublisher
     {
-        private string _path;
-
         public event SaveImageHandler HandleChange;
 
-        public void Handle(string path)
+        public void Download(string path)
         {
             HandleChange(path);
         }
