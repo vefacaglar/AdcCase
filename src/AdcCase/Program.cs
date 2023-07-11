@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using System;
 
 namespace AdcCase
 {
@@ -6,7 +7,7 @@ namespace AdcCase
 
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                  .AddJsonFile($"input.json", optional: false, reloadOnChange: true);
@@ -39,15 +40,23 @@ namespace AdcCase
 
             var completedCount = 0;
 
+            var tasks = new List<Task>();
+
             try
             {
+                await Task.WhenAll(tasks.ToArray());
+
                 Parallel.For(0, imageSetting.Count, parallelOptions, (index, token) =>
                 {
                     completedCount++;
 
-                    SetMessage($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)", $"Progress: {completedCount}/{imageSetting.Count}");
+                    var task = Task.Run(() => eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", cts.Token)).ContinueWith(x =>
+                    {
+                        SetMessage($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)", $"Progress: {completedCount}/{imageSetting.Count}");
+                        return Task.CompletedTask;
+                    });
 
-                    eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", cts.Token);
+                    var taskResult = task.Result;
                 });
             }
             catch (OperationCanceledException ex)
