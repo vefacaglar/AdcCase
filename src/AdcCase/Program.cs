@@ -7,6 +7,8 @@ namespace AdcCase
 
     class Program
     {
+        static object locker = new();
+
         static void Main(string[] args)
         {
             var configuration = new ConfigurationBuilder()
@@ -46,13 +48,12 @@ namespace AdcCase
                 {
                     completedCount++;
 
-                    var task = Task.Run(() => eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", 1, cts.Token)).ContinueWith(x =>
+                    eventPublisher.Download($"{imageSetting.SavePath}\\{index + 1}.jpg", 1, cts.Token);
+
+                    lock (locker)
                     {
                         SetMessage($"Downloading {imageSetting.Count} images ({imageSetting.Parallelism} parallel downloads at most)", $"Progress: {completedCount}/{imageSetting.Count}");
-                        return Task.CompletedTask;
-                    });
-
-                    var taskResult = task.Result;
+                    }
                 });
             }
             catch (OperationCanceledException ex)
